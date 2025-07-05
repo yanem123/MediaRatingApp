@@ -1,0 +1,6 @@
+@MediaRatingApp_HostAddress = http://localhost:5183
+
+GET {{MediaRatingApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
