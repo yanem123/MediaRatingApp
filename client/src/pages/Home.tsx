@@ -1,84 +1,205 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import SearchBar from '../components/SearchBar';
+import Card from '../components/Card';
 
 export default function Home() {
-    const [items, setItems] = useState<any[]>([]);
-    const [error, setError] = useState('');
+	interface Item {
+		id: string;
+		title: string;
+		authors: string[];
+		image: string;
+		type: 'book' | 'movie';
+		imdb?: string;
+	}
 
-    const handleSearch = async (query: string) => {
-        setError('');
-        setError('');
-        try {
-            const [booksRes, moviesRes] = await Promise.all([
-                fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&langRestrict=en`),
-                fetch(`https://www.omdbapi.com/?apikey=7a1b0cbd&s=${encodeURIComponent(query)}&type=movie`)
-            ]);
+	const [items, setItems] = useState<Item[]>([]);
+	const [error, setError] = useState('');
+	const [filter, setFilter] = useState<'all' | 'book' | 'movie'>('all');
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 20;
+	const [hasSearched, setHasSearched] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const [sortOrder, setSortOrder] = useState<'none' | 'booksFirst' | 'moviesFirst'>('none');
 
-            const booksData = await booksRes.json();
-            const moviesData = await moviesRes.json();
-            const placeholderImage = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+	const handleSearch = async (params: {
+	query: string;
+	filter: 'all' | 'book' | 'movie';
+	author?: string;
+	yearFrom?: number;
+	yearTo?: number;
+}) => {
+	const { query, filter, author, yearFrom, yearTo } = params;
 
-            const books = (booksData.items || []).map((item: any) => {
-                const imageLink = item.volumeInfo.imageLinks?.thumbnail?.replace(/zoom=\d/, 'zoom=3');
-                return {
-                    id: item.id,
-                    title: item.volumeInfo.title,
-                    authors: item.volumeInfo.authors,
-                    image: imageLink || placeholderImage,
-                    type: 'book'
-                };
-            });
+	setError('');
+	setCurrentPage(1);
 
-            const movies = (moviesData.Search || []).map((movie: any) => ({
-                id: movie.imdbID,
-                title: movie.Title,
-                authors: [movie.Year],
-                image: movie.Poster !== 'N/A' ? movie.Poster : placeholderImage,
-                type: 'movie'
-            }));
+	try {
+		const requests = [];
 
-            setItems([...books, ...movies]);
-        } catch (err) {
-            setError('Failed to fetch results');
-        }
+		if (filter === 'all' || filter === 'book') {
+			requests.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&language=eng`));
+		} else {
+			requests.push(Promise.resolve(null));
+		}
 
-    }
+		if (filter === 'all' || filter === 'movie') {
+			requests.push(fetch(`https://www.omdbapi.com/?apikey=7a1b0cbd&s=${encodeURIComponent(query)}&type=movie`));
+		} else {
+			requests.push(Promise.resolve(null));
+		}
 
-  return (
-    <div className="min-h-screen bg-gray-900 p-8">
-          <h1 className="text-4xl font-bold text-center mb-10 text-gray-100">Welcome to RateVerse</h1>
-          <h1 className="text-3xl font-bold mb-4">Explore Books & Movies</h1>
-          <SearchBar onSearch={handleSearch} />
+		const [booksRes, moviesRes] = await Promise.all(requests);
+		const openLibData = booksRes ? await booksRes.json() : null;
+		const moviesData = moviesRes ? await moviesRes.json() : null;
 
-          {error && <p className="text-red-500">{error}</p>}
+		const placeholderImage = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {items.map((item) => (
-                  <div
-                      key={item.id}
-                      className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:scale-105"
-                  >
-                      {item.image && (
-                          <img
-                              src={item.image}
-                              alt={item.title}
-                              className="w-full h-64 object-cover"
-                          />
-                      )}
-                      <div className="p-4 text-gray-900">
-                          <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                          {item.authors && (
-                              <p className="text-sm text-gray-600">
-                                  {item.type === 'book' ? `by ${item.authors.join(', ')}` : `Year: ${item.authors[0]}`}
-                              </p>
-                          )}
-                          <span className="text-xs uppercase font-semibold text-blue-500">
-                              {item.type}
-                          </span>
-                      </div>
-                  </div>
-              ))}
-      </div>
-    </div>
-  );
+		let openLibBooks = openLibData?.docs?.map((book: any) => ({
+			id: book.key,
+			title: book.title,
+			authors: book.author_name || ["Unknown author"],
+			year: book.first_publish_year,
+			image: book.cover_i
+			? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+			: placeholderImage,
+		type: 'book'
+		})) || [];
+
+		if (author) {
+			openLibBooks = openLibBooks.filter((b) =>
+			b.authors.some((a: string) =>
+			a.toLowerCase().includes(author.toLowerCase())
+			));
+		}
+
+		if (yearFrom || yearTo) {
+			openLibBooks = openLibBooks.filter((b) => {
+				if (!b.year) return false;
+				return (!yearFrom || b.year >= yearFrom) && (!yearTo || b.year <= yearTo);
+			});
+		}
+
+		let movies = moviesData?.Search
+			? await Promise.all(
+			moviesData.Search.map(async (movie: any) => {
+			const detailRes = await fetch(`https://www.omdbapi.com/?apikey=7a1b0cbd&i=${movie.imdbID}`);
+			const detailData = await detailRes.json();
+
+			return {
+			  id: movie.imdbID,
+			  title: movie.Title,
+			  authors: [movie.Year],
+			  year: parseInt(movie.Year),
+			  image: movie.Poster !== 'N/A' ? movie.Poster : placeholderImage,
+			  type: 'movie',
+			  imdb: detailData.imdbRating || 'N/A'
+			};
+		  })
+		)
+	  : [];
+
+		if (author) {
+			movies = movies.filter((m) =>
+			m.title.toLowerCase().includes(author.toLowerCase())
+		);
+		}
+
+		if (yearFrom || yearTo) {
+		movies = movies.filter((m) => {
+			if (!m.year) return false;
+			return (!yearFrom || m.year >= yearFrom) && (!yearTo || m.year <= yearTo);
+		});
+		}
+
+		const results =
+		filter === 'book'
+			? openLibBooks
+			: filter === 'movie'
+			? movies
+			: [...openLibBooks, ...movies];
+
+		setItems(results);
+	} catch (err) {
+		setError('Failed to fetch results');
+	}
+};
+useEffect(() => {
+	if (sortOrder === 'none') return; // nincs rendezés
+
+	setItems((prev) => {
+		const sorted = [...prev];
+		if (sortOrder === 'booksFirst') {
+		sorted.sort((a, b) => (a.type === 'book' && b.type === 'movie' ? -1 : 1));
+		} else if (sortOrder === 'moviesFirst') {
+		sorted.sort((a, b) => (a.type === 'movie' && b.type === 'book' ? -1 : 1));
+		}
+		return sorted;
+	});
+}, [sortOrder]);
+
+useEffect(() => {
+	window.scrollTo({ top: 0, behavior: "smooth" });
+}, [currentPage]);
+
+
+return (
+	<div className="min-h-screen bg-gray-900 p-8">
+		<h1 className="text-4xl font-bold text-center mb-10 text-gray-100">
+			Welcome to RateVerse
+		</h1>
+		<div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+		<div className="flex gap-4">
+			<SearchBar onSearch={handleSearch} />
+			<select
+			value={sortOrder}
+			onChange={(e) => setSortOrder(e.target.value as 'none' | 'booksFirst' | 'moviesFirst')}
+			className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg border border-gray-700 h-[42px]">
+			<option value="none">Default order</option>
+			<option value="booksFirst">Books first</option>
+			<option value="moviesFirst">Movies first</option>
+			</select>
+		</div>
+		</div>
+			{error && <p className="text-red-500 text-center mt-4">{error}</p>}
+
+		<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+			{loading ? (
+				<p className="text-gray-200 text-center w-full col-span-full">Fetching results...</p>
+			) : items.length === 0 && hasSearched ? (
+					<p className="text-gray-200 text-center w-full col-span-full">No results found.</p>
+			) : (
+				items
+					.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+					.map(item => <Card key={item.id} item={item} />)
+			)}
+
+		</div>
+		{items.length > itemsPerPage && (
+			<div className="flex justify-center items-center gap-4 mt-8">
+				<button
+					onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+					disabled={currentPage === 1}
+					className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50">
+						Previous
+				</button>
+
+				<span className="text-gray-300">
+					Page {currentPage} of {Math.ceil(items.length / itemsPerPage)}
+				</span>
+
+				<button
+					onClick={() =>
+						setCurrentPage((prev) =>
+							Math.min(prev + 1, Math.ceil(items.length / itemsPerPage))
+							)
+						}
+					disabled={currentPage === Math.ceil(items.length / itemsPerPage)}
+					className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50">
+					Next
+				</button>
+			</div>)
+		}
+	</div>
+	);
 }
+
