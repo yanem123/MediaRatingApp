@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useUser, Rating as UserRating } from '../context/UserContext';
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
@@ -13,7 +13,7 @@ interface Item {
 }
 
 interface CardProps {
-	item: Item;
+	item: any;
 }
 
 const Card: React.FC<CardProps> = ({ item }) => {
@@ -110,12 +110,22 @@ const Card: React.FC<CardProps> = ({ item }) => {
 				</span>
 
 				<div className="mt-2 flex justify-center">
-					<Box>
-						<Rating
-							name={`rating-${item.id}`}
-							value={value}
-							onChange={handleChange}/>
-					</Box>
+					{item.userRating ? (
+						<Box>
+							<Rating
+								name={`rating-readonly-${item.id}`}
+								value={item.userRating}
+								readOnly/>
+						</Box>
+					) : (
+						<Box>
+							<Rating
+								name={`rating-${item.id}`}
+								value={value}
+								onChange={handleChange}
+							/>
+						</Box>
+					)}
 				</div>
 			</div>
 		</div>

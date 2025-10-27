@@ -66,7 +66,7 @@ export default function Profile() {
 						}
 					})
 				);
-				setRatings(mediaDetails);
+				setRatings(mediaDetails.sort((a, b) => b.score - a.score));
 			})
 	})
 	const handleDelete = async (ratingId: number) => {
