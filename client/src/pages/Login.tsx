@@ -11,20 +11,32 @@ export default function Login() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        try {
             const response = await fetch('http://localhost:5183/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: userName, password: password }),
+                body: JSON.stringify({ username: userName, password }),
             });
 
             console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                setMessage('Login unsuccessful. Invalid credentials.');
+                return;
+            }
+
             const userData = await response.json();
-            if (response.ok && userData.id) {
+
+            if (userData && userData.id) {
                 login(userData);
                 navigate('/profile');
             } else {
-            setMessage('Login unsuccessful. Invalid Credentials');
+                setMessage('Login unsuccessful. Invalid credentials.');
             }
+        } catch (error) {
+            console.error('Login error:', error);
+            setMessage('An error occurred while logging in. Please try again.');
+        }
     };
 
     return (
@@ -36,7 +48,8 @@ export default function Login() {
                 {message && <p className="text-red-500 text-sm mb-4">{message}</p>}
                 <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
-                <input
+                    <input
+                    id="usernameInput"
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
@@ -46,7 +59,8 @@ export default function Login() {
 
         <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-            <input
+                    <input
+                id="passwordInput"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -54,6 +68,7 @@ export default function Login() {
                 required/>
         </div>
                 <button
+                    id="submitButton"
                     type="submit"
                     className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-blue-600 transition">
                     Log in

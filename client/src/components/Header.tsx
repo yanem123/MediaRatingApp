@@ -20,7 +20,7 @@ export default function Header() {
 			<nav className="flex justify-between items-center">
 			  
 				<h1 className="text-xl font-bold">
-					<Link to="/" className="hover:text-blue-400 transition">
+					<Link id="logoButton" to="/" className="hover:text-blue-400 transition">
 						RateVerse
 					</Link>
 				</h1>
@@ -28,6 +28,7 @@ export default function Header() {
 				<button
 					onClick={() => setMenuOpen(!menuOpen)}
 					className="focus:outline-none hover:text-blue-400 transition"
+					id="hamburgerButton"
 				>
 					{menuOpen ? <X size={28} /> : <Menu size={28} />}
 				</button>
@@ -44,12 +45,14 @@ export default function Header() {
 							{user ? (
 								<>
 									<Link
+										id="profileButton"
 										to="/profile"
 										onClick={() => setMenuOpen(false)}
 										className="w-44 text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm transition">
 										Profile
 									</Link>
 									<button
+										id="logoutButton"
 										onClick={() => {
 											handleLogout();
 											setMenuOpen(false);
@@ -61,12 +64,14 @@ export default function Header() {
 							) : (
 								<>
 									<Link
+										id="registrationButton"
 										to="/register"
 										onClick={() => setMenuOpen(false)}
 										className="w-44 text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm transition">
 										Registration
 									</Link>
 									<Link
+										id="loginButton"
 										to="/login"
 										onClick={() => setMenuOpen(false)}
 										className="w-44 text-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm transition">

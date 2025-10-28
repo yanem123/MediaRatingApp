@@ -77,7 +77,7 @@ const Card: React.FC<CardProps> = ({ item }) => {
 	};
 
 	return (
-		<div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:scale-105">
+		<div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:scale-105 card">
 			<div className="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden">
 				<img
 					src={item.image}

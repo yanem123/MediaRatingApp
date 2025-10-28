@@ -84,7 +84,7 @@ export default function Profile() {
 	return (
 		<div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-6">
 			<div className="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-2xl">
-				<h1 className="text-3xl font-bold mb-4 text-center">User Profile</h1>
+				<h1 id="profileText" className="text-3xl font-bold mb-4 text-center">User Profile</h1>
 
 				<div className="mb-6">
 					<p><strong>Username:</strong> {user?.username}</p>
@@ -98,7 +98,7 @@ export default function Profile() {
 				{ratings.length > 0 ? (
 					<ul className="space-y-3">
 						{ratings.map(r => (
-							<li key={r.id} className="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
+							<li key={r.id} className="bg-gray-700 p-4 rounded-lg flex items-center justify-between ratedMedia">
 								<div className="flex items-center space-x-4">
 									<img
 										src={r.image}
@@ -114,7 +114,7 @@ export default function Profile() {
 									<span className="text-yellow-400 font-bold text-xl">⭐ {r.score}</span>
 									<button
 										onClick={() => handleDelete(r.id)}
-										className="text-red-500 hover:text-red-700 text-xl font-bold">
+										className="text-red-500 hover:text-red-700 text-xl font-bold deleteButton">
 										✖
 									</button>
 								</div>
@@ -122,7 +122,7 @@ export default function Profile() {
 						))}
 					</ul>
 				) : (
-					<p className="text-gray-400 text-center mt-4">
+					<p className="text-gray-400 text-center mt-4" id="noRatedMedia">
 						You haven't rated any media yet.
 					</p>
 				)}

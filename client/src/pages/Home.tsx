@@ -177,7 +177,9 @@ export default function Home() {
 
 	return (
 		<div className="min-h-screen bg-gray-900 p-8">
-			<h1 className="text-4xl font-bold text-center mb-10 text-gray-100">
+			<h1
+				id = "homeText"
+				className="text-4xl font-bold text-center mb-10 text-gray-100">
 				Welcome to RateVerse
 			</h1>
 
