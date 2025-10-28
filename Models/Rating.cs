@@ -10,10 +10,5 @@ namespace MediaRatingApp.Models
         public int Score { get; set; }
         public string? Comment { get; set; }
         public User? User { get; set; }
-
-        public bool IsValid()
-        {
-            return Score >= 1 && Score <= 5 && !string.IsNullOrEmpty(MediaId);
-        }
     }
 }
