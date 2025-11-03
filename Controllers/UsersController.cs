@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace MediaRatingApp.Controllers
 {
 	[ApiController]
-	[Route("api/auth")]
+	[Route("api/Users")]
 	public class UsersController : ControllerBase
 	{
 		private readonly AppDbContext _context;
@@ -27,28 +27,20 @@ namespace MediaRatingApp.Controllers
 		}
 
 
-		[HttpPost]
-		public async Task<ActionResult<User>> Register(UserRegisterDto request)
-		{
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
 
-			if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-			{
-				return BadRequest("User already exists.");
-			}
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
 
-			string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
 
-			var newUser = new User
-			{
-				Username = request.Username,
-				Email = request.Email,
-				PasswordHash = passwordHash
-			};
-
-			_context.Users.Add(newUser);
-			await _context.SaveChangesAsync();
-
-			return CreatedAtAction(nameof(GetAllUsers), new { id = newUser.Id }, newUser);
-		}
-	}
+            return Ok(new { message = $"User '{user.Username}' has been deleted successfully." });
+        }
+    }
 }
