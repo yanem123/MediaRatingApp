@@ -85,6 +85,6 @@ export default function SearchBar({ onSearch }: Props) {
 				Search
 			</button>
 		</div>
-	</form>
-  );
+		</form>
+	);
 }

@@ -110,6 +110,7 @@ export default function Home() {
 							id: movie.imdbID,
 							title: movie.Title,
 							authors: [movie.Year],
+							director: detailData.Director || "",
 							year: parseInt(movie.Year),
 							image: movie.Poster !== 'N/A' ? movie.Poster : placeholderImage,
 							type: 'movie',
@@ -121,7 +122,7 @@ export default function Home() {
 
 			if (author) {
 				movies = movies.filter((m) =>
-					m.title.toLowerCase().includes(author.toLowerCase())
+					m.director?.toLowerCase().includes(author.toLowerCase())
 				);
 			}
 
