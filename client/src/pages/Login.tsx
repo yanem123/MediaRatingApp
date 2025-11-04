@@ -30,9 +30,7 @@ export default function Login() {
             if (userData && userData.id) {
                 login(userData);
                 navigate('/profile');
-            } else {
-                setMessage('Login unsuccessful. Invalid credentials.');
-            }
+            } 
         } catch (error) {
             console.error('Login error:', error);
             setMessage('An error occurred while logging in. Please try again.');
