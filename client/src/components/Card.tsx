@@ -53,8 +53,6 @@ const Card: React.FC<CardProps> = ({ item }) => {
 
 			if (!res.ok) throw new Error('Failed to save rating');
 
-			const updatedRatings = await res.json();
-
 			addRating({ id: item.id, type: item.type, score: newValue });
 			console.log("Added rating: " + {
 				userId: user.id,
